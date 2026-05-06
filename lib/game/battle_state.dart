@@ -44,6 +44,7 @@ class BattleState {
     int? maxBossPosture,
     BossAttack? currentAttack,
     String? message,
+    bool clearCurrentAttack = false,
   }) {
     return BattleState(
       playerHp: playerHp ?? this.playerHp,
@@ -52,7 +53,9 @@ class BattleState {
       maxBossHp: maxBossHp ?? this.maxBossHp,
       bossPosture: bossPosture ?? this.bossPosture,
       maxBossPosture: maxBossPosture ?? this.maxBossPosture,
-      currentAttack: currentAttack ?? this.currentAttack,
+      currentAttack: clearCurrentAttack
+          ? null
+          : currentAttack ?? this.currentAttack,
       message: message ?? this.message,
     );
   }
