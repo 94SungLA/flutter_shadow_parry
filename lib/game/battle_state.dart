@@ -15,14 +15,14 @@ class BattleState {
 
   factory BattleState.initial() {
     return const BattleState(
-      playerHp: 3,
-      maxPlayerHp: 3,
+      playerHp: 4,
+      maxPlayerHp: 4,
       bossHp: 100,
       maxBossHp: 100,
       bossPosture: 0,
       maxBossPosture: 100,
       combo: 0,
-      message: '等待 Boss 出招',
+      message: '',
     );
   }
 

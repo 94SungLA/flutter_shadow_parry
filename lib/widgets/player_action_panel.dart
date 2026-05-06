@@ -22,7 +22,7 @@ class PlayerActionPanel extends StatelessWidget {
           child: FilledButton.tonalIcon(
             onPressed: onDodge,
             icon: const Icon(Icons.directions_run),
-            label: const Text('閃避'),
+            label: const Text('閃身'),
           ),
         ),
       ],

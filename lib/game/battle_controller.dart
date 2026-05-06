@@ -53,7 +53,7 @@ class BattleController extends ChangeNotifier {
 
     _state = _state.copyWith(
       currentAttack: _buildAttack(attackType),
-      message: 'Boss 出招了',
+      message: '',
     );
     notifyListeners();
 
@@ -82,14 +82,14 @@ class BattleController extends ChangeNotifier {
       case AttackType.slash:
         return const BossAttack(
           type: AttackType.slash,
-          warningText: '普通攻擊：請格擋',
+          warningText: '',
           requiredActionText: '格擋',
         );
       case AttackType.perilous:
         return const BossAttack(
           type: AttackType.perilous,
-          warningText: '危攻擊：請閃避',
-          requiredActionText: '閃避',
+          warningText: '',
+          requiredActionText: '閃身',
         );
     }
   }
@@ -105,13 +105,14 @@ class BattleController extends ChangeNotifier {
     if (attack.type == playerAction) {
       _handleSuccessfulResponse(attack.type);
     } else {
-      _damagePlayer('判斷錯誤！受到傷害');
+      _damagePlayer('受傷');
     }
   }
 
   void _handleSuccessfulResponse(AttackType attackType) {
-    final nextCombo = _state.combo + 1;
-    final postureIncrease = min(20 + nextCombo * 5, 35);
+    final isSlash = attackType == AttackType.slash;
+    final nextCombo = isSlash ? _state.combo + 1 : _state.combo;
+    final postureIncrease = isSlash ? min(15 + nextCombo * 3, 25) : 0;
     final nextPosture = (_state.bossPosture + postureIncrease).clamp(
       0,
       _state.maxBossPosture,
@@ -119,7 +120,7 @@ class BattleController extends ChangeNotifier {
     final isExecutionReady = nextPosture >= _state.maxBossPosture;
     final successMessage = switch (attackType) {
       AttackType.slash => '鏘！完美格擋',
-      AttackType.perilous => '閃過危攻擊',
+      AttackType.perilous => '閃身',
     };
 
     _state = _state.copyWith(
@@ -145,7 +146,7 @@ class BattleController extends ChangeNotifier {
       return;
     }
 
-    _damagePlayer('反應太慢！受到傷害');
+    _damagePlayer('受傷');
   }
 
   void _damagePlayer(String message) {

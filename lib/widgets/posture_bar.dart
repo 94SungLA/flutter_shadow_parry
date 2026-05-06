@@ -17,6 +17,7 @@ class PostureBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     const postureColor = Color(0xFFE6B422);
 
     return Column(
@@ -30,13 +31,28 @@ class PostureBar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            minHeight: 12,
-            value: _progress,
-            color: postureColor,
-            backgroundColor: postureColor.withValues(alpha: 0.2),
+        Container(
+          height: 14,
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            border: Border.all(color: postureColor.withValues(alpha: 0.65)),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: _progress,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: postureColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: postureColor.withValues(alpha: 0.5),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],

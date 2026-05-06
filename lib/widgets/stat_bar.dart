@@ -25,6 +25,7 @@ class StatBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -37,13 +38,33 @@ class StatBar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            minHeight: 14,
-            value: _progress,
-            color: color,
-            backgroundColor: color.withValues(alpha: 0.2),
+        Container(
+          height: 18,
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            border: Border.all(color: color.withValues(alpha: 0.55)),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: _progress,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: color,
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.45),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
