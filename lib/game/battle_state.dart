@@ -8,6 +8,7 @@ class BattleState {
     required this.maxBossHp,
     required this.bossPosture,
     required this.maxBossPosture,
+    required this.combo,
     required this.message,
     this.currentAttack,
   });
@@ -20,6 +21,7 @@ class BattleState {
       maxBossHp: 100,
       bossPosture: 0,
       maxBossPosture: 100,
+      combo: 0,
       message: '等待 Boss 出招',
     );
   }
@@ -30,6 +32,7 @@ class BattleState {
   final int maxBossHp;
   final int bossPosture;
   final int maxBossPosture;
+  final int combo;
   final BossAttack? currentAttack;
   final String message;
 
@@ -42,6 +45,7 @@ class BattleState {
     int? maxBossHp,
     int? bossPosture,
     int? maxBossPosture,
+    int? combo,
     BossAttack? currentAttack,
     String? message,
     bool clearCurrentAttack = false,
@@ -53,6 +57,7 @@ class BattleState {
       maxBossHp: maxBossHp ?? this.maxBossHp,
       bossPosture: bossPosture ?? this.bossPosture,
       maxBossPosture: maxBossPosture ?? this.maxBossPosture,
+      combo: combo ?? this.combo,
       currentAttack: clearCurrentAttack
           ? null
           : currentAttack ?? this.currentAttack,

@@ -28,9 +28,7 @@ class BattleController extends ChangeNotifier {
     _state = BattleState.initial();
     notifyListeners();
 
-    _attackTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      _createBossAttack();
-    });
+    _scheduleNextAttack();
   }
 
   void parry() {
@@ -60,7 +58,23 @@ class BattleController extends ChangeNotifier {
     notifyListeners();
 
     _reactionTimer?.cancel();
-    _reactionTimer = Timer(const Duration(seconds: 1), _handleReactionTimeout);
+    _reactionTimer = Timer(
+      const Duration(milliseconds: 900),
+      _handleReactionTimeout,
+    );
+  }
+
+  void _scheduleNextAttack() {
+    if (!_isBattleRunning ||
+        _state.currentAttack != null ||
+        _state.isExecutionReady ||
+        _state.playerHp <= 0) {
+      return;
+    }
+
+    _attackTimer?.cancel();
+    final delay = Duration(milliseconds: 1400 + _random.nextInt(801));
+    _attackTimer = Timer(delay, _createBossAttack);
   }
 
   BossAttack _buildAttack(AttackType type) {
@@ -96,7 +110,9 @@ class BattleController extends ChangeNotifier {
   }
 
   void _handleSuccessfulResponse(AttackType attackType) {
-    final nextPosture = (_state.bossPosture + 25).clamp(
+    final nextCombo = _state.combo + 1;
+    final postureIncrease = min(20 + nextCombo * 5, 35);
+    final nextPosture = (_state.bossPosture + postureIncrease).clamp(
       0,
       _state.maxBossPosture,
     );
@@ -108,6 +124,7 @@ class BattleController extends ChangeNotifier {
 
     _state = _state.copyWith(
       bossPosture: nextPosture,
+      combo: nextCombo,
       clearCurrentAttack: true,
       message: isExecutionReady ? '架勢崩解！可以處決' : successMessage,
     );
@@ -117,6 +134,10 @@ class BattleController extends ChangeNotifier {
     }
 
     notifyListeners();
+
+    if (!isExecutionReady) {
+      _scheduleNextAttack();
+    }
   }
 
   void _handleReactionTimeout() {
@@ -133,6 +154,7 @@ class BattleController extends ChangeNotifier {
 
     _state = _state.copyWith(
       playerHp: nextPlayerHp,
+      combo: 0,
       clearCurrentAttack: true,
       message: message,
     );
@@ -142,6 +164,10 @@ class BattleController extends ChangeNotifier {
     }
 
     notifyListeners();
+
+    if (!isDefeated) {
+      _scheduleNextAttack();
+    }
   }
 
   void _stopBossAttack() {

@@ -146,6 +146,15 @@ class _BattleContent extends StatelessWidget {
             maxValue: state.maxPlayerHp,
             color: colorScheme.primary,
           ),
+          const SizedBox(height: 10),
+          Text(
+            '連續看破：${state.combo}',
+            textAlign: TextAlign.right,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: colorScheme.secondary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 24),
           Expanded(
             child: Center(
