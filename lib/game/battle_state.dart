@@ -1,0 +1,59 @@
+import '../models/boss_attack.dart';
+
+class BattleState {
+  const BattleState({
+    required this.playerHp,
+    required this.maxPlayerHp,
+    required this.bossHp,
+    required this.maxBossHp,
+    required this.bossPosture,
+    required this.maxBossPosture,
+    required this.message,
+    this.currentAttack,
+  });
+
+  factory BattleState.initial() {
+    return const BattleState(
+      playerHp: 3,
+      maxPlayerHp: 3,
+      bossHp: 100,
+      maxBossHp: 100,
+      bossPosture: 0,
+      maxBossPosture: 100,
+      message: '等待 Boss 出招',
+    );
+  }
+
+  final int playerHp;
+  final int maxPlayerHp;
+  final int bossHp;
+  final int maxBossHp;
+  final int bossPosture;
+  final int maxBossPosture;
+  final BossAttack? currentAttack;
+  final String message;
+
+  bool get isExecutionReady => bossPosture >= maxBossPosture;
+
+  BattleState copyWith({
+    int? playerHp,
+    int? maxPlayerHp,
+    int? bossHp,
+    int? maxBossHp,
+    int? bossPosture,
+    int? maxBossPosture,
+    BossAttack? currentAttack,
+    String? message,
+  }) {
+    return BattleState(
+      playerHp: playerHp ?? this.playerHp,
+      maxPlayerHp: maxPlayerHp ?? this.maxPlayerHp,
+      bossHp: bossHp ?? this.bossHp,
+      maxBossHp: maxBossHp ?? this.maxBossHp,
+      bossPosture: bossPosture ?? this.bossPosture,
+      maxBossPosture: maxBossPosture ?? this.maxBossPosture,
+      currentAttack: currentAttack ?? this.currentAttack,
+      message: message ?? this.message,
+    );
+  }
+}
