@@ -168,6 +168,7 @@ class _BattleContent extends StatelessWidget {
                       isPlayerDamaged: state.message.contains('受到傷害'),
                       showParryClash: state.message == '鏘！完美格擋',
                       isBroken: state.isExecutionReady,
+                      currentAttackType: state.currentAttack?.type,
                     ),
                     const SizedBox(height: 24),
                     _AttackPrompt(state: state, colorScheme: colorScheme),
