@@ -163,7 +163,12 @@ class _BattleContent extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const BossPanel(),
+                    BossPanel(
+                      isAttacking: state.currentAttack != null,
+                      isPlayerDamaged: state.message.contains('受到傷害'),
+                      showParryClash: state.message == '鏘！完美格擋',
+                      isBroken: state.isExecutionReady,
+                    ),
                     const SizedBox(height: 24),
                     _AttackPrompt(state: state, colorScheme: colorScheme),
                     const SizedBox(height: 12),
