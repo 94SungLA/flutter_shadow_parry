@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 
 class PlayerActionPanel extends StatelessWidget {
-  const PlayerActionPanel({
-    super.key,
-    required this.onParry,
-    required this.onDodge,
-  });
+  const PlayerActionPanel({super.key, this.onParry, this.onDodge});
 
-  final VoidCallback onParry;
-  final VoidCallback onDodge;
+  final VoidCallback? onParry;
+  final VoidCallback? onDodge;
 
   @override
   Widget build(BuildContext context) {

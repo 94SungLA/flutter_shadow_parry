@@ -89,23 +89,27 @@ class BattleController extends ChangeNotifier {
     _reactionTimer?.cancel();
 
     if (attack.type == playerAction) {
-      _handleSuccessfulResponse();
+      _handleSuccessfulResponse(attack.type);
     } else {
-      _damagePlayer('反應錯誤，Player HP -1');
+      _damagePlayer('判斷錯誤！受到傷害');
     }
   }
 
-  void _handleSuccessfulResponse() {
+  void _handleSuccessfulResponse(AttackType attackType) {
     final nextPosture = (_state.bossPosture + 25).clamp(
       0,
       _state.maxBossPosture,
     );
     final isExecutionReady = nextPosture >= _state.maxBossPosture;
+    final successMessage = switch (attackType) {
+      AttackType.slash => '鏘！完美格擋',
+      AttackType.perilous => '閃過危攻擊',
+    };
 
     _state = _state.copyWith(
       bossPosture: nextPosture,
       clearCurrentAttack: true,
-      message: isExecutionReady ? 'Boss 架勢已崩解，可以處決' : '反應成功',
+      message: isExecutionReady ? '架勢崩解！可以處決' : successMessage,
     );
 
     if (isExecutionReady) {
@@ -120,7 +124,7 @@ class BattleController extends ChangeNotifier {
       return;
     }
 
-    _damagePlayer('未及時反應，Player HP -1');
+    _damagePlayer('反應太慢！受到傷害');
   }
 
   void _damagePlayer(String message) {
@@ -130,7 +134,7 @@ class BattleController extends ChangeNotifier {
     _state = _state.copyWith(
       playerHp: nextPlayerHp,
       clearCurrentAttack: true,
-      message: isDefeated ? '玩家 HP 歸零' : message,
+      message: message,
     );
 
     if (isDefeated) {

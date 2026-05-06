@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../game/battle_controller.dart';
 import '../game/battle_state.dart';
+import '../models/attack_type.dart';
 import '../widgets/boss_panel.dart';
 import '../widgets/player_action_panel.dart';
 import '../widgets/posture_bar.dart';
@@ -123,7 +124,7 @@ class _BattleContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final attackMessage = state.currentAttack?.warningText ?? state.message;
+    final canRespond = state.currentAttack != null && !state.isExecutionReady;
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -155,18 +156,12 @@ class _BattleContent extends StatelessWidget {
                   children: [
                     const BossPanel(),
                     const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: colorScheme.outline),
-                        borderRadius: BorderRadius.circular(8),
-                        color: colorScheme.surfaceContainerHighest,
-                      ),
-                      child: Text(
-                        attackMessage,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+                    _AttackPrompt(state: state, colorScheme: colorScheme),
+                    const SizedBox(height: 12),
+                    Text(
+                      state.message,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],
                 ),
@@ -175,14 +170,31 @@ class _BattleContent extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           if (state.isExecutionReady) ...[
-            FilledButton.icon(
+            FilledButton(
               onPressed: onExecute,
-              icon: const Icon(Icons.flash_on),
-              label: const Text('處決'),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.error,
+                foregroundColor: colorScheme.onError,
+                minimumSize: const Size.fromHeight(52),
+                textStyle: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.flash_on),
+                  SizedBox(width: 8),
+                  Text('處決'),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
           ],
-          PlayerActionPanel(onParry: onParry, onDodge: onDodge),
+          PlayerActionPanel(
+            onParry: canRespond ? onParry : null,
+            onDodge: canRespond ? onDodge : null,
+          ),
           const SizedBox(height: 16),
           OutlinedButton(onPressed: onBackToTitle, child: const Text('返回主畫面')),
           const SizedBox(height: 12),
@@ -191,6 +203,76 @@ class _BattleContent extends StatelessWidget {
           FilledButton.tonal(
             onPressed: onDefeatTest,
             child: const Text('前往失敗測試'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttackPrompt extends StatelessWidget {
+  const _AttackPrompt({required this.state, required this.colorScheme});
+
+  final BattleState state;
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final attack = state.currentAttack;
+    final isPerilous = attack?.type == AttackType.perilous;
+    final isSlash = attack?.type == AttackType.slash;
+    final backgroundColor = isPerilous
+        ? colorScheme.errorContainer
+        : isSlash
+        ? colorScheme.primaryContainer
+        : colorScheme.surfaceContainerHighest;
+    final foregroundColor = isPerilous
+        ? colorScheme.onErrorContainer
+        : isSlash
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurfaceVariant;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isPerilous ? colorScheme.error : colorScheme.outline,
+          width: isPerilous ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(8),
+        color: backgroundColor,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (isPerilous) ...[
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colorScheme.error,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '危',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: colorScheme.onError,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Flexible(
+            child: Text(
+              attack?.warningText ?? '等待 Boss 出招',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: foregroundColor,
+                fontWeight: isPerilous || isSlash ? FontWeight.bold : null,
+              ),
+            ),
           ),
         ],
       ),
