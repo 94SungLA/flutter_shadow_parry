@@ -65,13 +65,26 @@ class _BattleScreenState extends State<BattleScreen> {
 
   void _playAudioFeedback(BattleState previousState, BattleState currentState) {
     final attack = currentState.currentAttack;
-    if (previousState.currentAttack == null &&
-        attack?.type == AttackType.perilous) {
-      _audioService.playDanger();
+    if (previousState.currentAttack == null && attack != null) {
+      switch (attack.type) {
+        case AttackType.slash:
+          _audioService.playAttackWarning();
+        case AttackType.perilous:
+          _audioService.playDanger();
+      }
     }
 
-    if (currentState.bossPosture > previousState.bossPosture) {
+    if (!previousState.isExecutionReady && currentState.isExecutionReady) {
+      _audioService.playPostureBreak();
+    }
+
+    if (previousState.currentAttack?.type == AttackType.slash &&
+        currentState.bossPosture > previousState.bossPosture) {
       _audioService.playParry();
+    }
+
+    if (currentState.message == '閃身') {
+      _audioService.playDodgeSuccess();
     }
 
     if (previousState.playerHp > currentState.playerHp) {

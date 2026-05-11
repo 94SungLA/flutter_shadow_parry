@@ -8,9 +8,12 @@ class AudioService {
   static const String _assetPrefix = 'assets/audio/';
   static const String _audioSourcePrefix = 'audio/';
   static const String _bgmFile = 'bgm.mp3';
+  static const String _attackWarningFile = 'attack_warning.mp3';
   static const String _parryFile = 'parry.mp3';
+  static const String _dodgeSuccessFile = 'dodge_success.mp3';
   static const String _hitFile = 'hit.mp3';
   static const String _dangerFile = 'danger.mp3';
+  static const String _postureBreakFile = 'posture_break.mp3';
   static const String _executionFile = 'execution.mp3';
 
   final AudioPlayer _bgmPlayer;
@@ -37,11 +40,17 @@ class AudioService {
     }
   }
 
+  Future<void> playAttackWarning() => _playEffect(_attackWarningFile);
+
   Future<void> playParry() => _playEffect(_parryFile);
+
+  Future<void> playDodgeSuccess() => _playEffect(_dodgeSuccessFile);
 
   Future<void> playHit() => _playEffect(_hitFile);
 
   Future<void> playDanger() => _playEffect(_dangerFile);
+
+  Future<void> playPostureBreak() => _playEffect(_postureBreakFile);
 
   Future<void> playExecution() => _playEffect(_executionFile);
 
