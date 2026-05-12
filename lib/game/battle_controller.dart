@@ -15,6 +15,7 @@ class BattleController extends ChangeNotifier {
   BattleState _state = BattleState.initial();
   Timer? _attackTimer;
   Timer? _reactionTimer;
+  Timer? _attackRecoveryTimer;
   bool _isBattleRunning = false;
 
   BattleState get state => _state;
@@ -37,6 +38,44 @@ class BattleController extends ChangeNotifier {
 
   void dodge() {
     _respondWith(AttackType.perilous);
+  }
+
+  void attack() {
+    if (!_isBattleRunning || _state.isExecutionReady || _state.playerHp <= 0) {
+      return;
+    }
+
+    if (_state.currentAttack != null) {
+      _reactionTimer?.cancel();
+      _damagePlayer(15, '反擊');
+      return;
+    }
+
+    if (!_state.canPlayerAttack) {
+      return;
+    }
+
+    final nextPosture = (_state.bossPosture + 10).clamp(
+      0,
+      _state.maxBossPosture,
+    );
+    final isExecutionReady = nextPosture >= _state.maxBossPosture;
+
+    _state = _state.copyWith(
+      bossPosture: nextPosture,
+      canPlayerAttack: false,
+      message: isExecutionReady ? '架勢崩解！可以處決' : '攻擊',
+    );
+
+    if (isExecutionReady) {
+      _stopBossAttack();
+    }
+
+    notifyListeners();
+
+    if (!isExecutionReady) {
+      _startAttackRecovery();
+    }
   }
 
   void _createBossAttack() {
@@ -102,32 +141,32 @@ class BattleController extends ChangeNotifier {
 
     _reactionTimer?.cancel();
 
-    if (attack.type == playerAction) {
-      _handleSuccessfulResponse(attack.type);
-    } else {
-      _damagePlayer('受傷');
+    switch ((attack.type, playerAction)) {
+      case (AttackType.slash, AttackType.slash):
+        _handleSlashParry();
+      case (AttackType.slash, AttackType.perilous):
+        _clearAttackAndContinue('閃身');
+      case (AttackType.perilous, AttackType.perilous):
+        _clearAttackAndContinue('閃身');
+      case (AttackType.perilous, AttackType.slash):
+        _damagePlayer(35, '受傷');
     }
   }
 
-  void _handleSuccessfulResponse(AttackType attackType) {
-    final isSlash = attackType == AttackType.slash;
-    final nextCombo = isSlash ? _state.combo + 1 : _state.combo;
-    final postureIncrease = isSlash ? min(15 + nextCombo * 3, 25) : 0;
+  void _handleSlashParry() {
+    final nextCombo = _state.combo + 1;
+    final postureIncrease = min(15 + nextCombo * 3, 25);
     final nextPosture = (_state.bossPosture + postureIncrease).clamp(
       0,
       _state.maxBossPosture,
     );
     final isExecutionReady = nextPosture >= _state.maxBossPosture;
-    final successMessage = switch (attackType) {
-      AttackType.slash => '鏘！完美格擋',
-      AttackType.perilous => '閃身',
-    };
 
     _state = _state.copyWith(
       bossPosture: nextPosture,
       combo: nextCombo,
       clearCurrentAttack: true,
-      message: isExecutionReady ? '架勢崩解！可以處決' : successMessage,
+      message: isExecutionReady ? '架勢崩解！可以處決' : '鏘！完美格擋',
     );
 
     if (isExecutionReady) {
@@ -142,15 +181,23 @@ class BattleController extends ChangeNotifier {
   }
 
   void _handleReactionTimeout() {
-    if (!_isBattleRunning || _state.currentAttack == null) {
+    final attack = _state.currentAttack;
+    if (!_isBattleRunning || attack == null) {
       return;
     }
 
-    _damagePlayer('受傷');
+    final damage = switch (attack.type) {
+      AttackType.slash => 20,
+      AttackType.perilous => 35,
+    };
+    _damagePlayer(damage, '受傷');
   }
 
-  void _damagePlayer(String message) {
-    final nextPlayerHp = (_state.playerHp - 1).clamp(0, _state.maxPlayerHp);
+  void _damagePlayer(int damage, String message) {
+    final nextPlayerHp = (_state.playerHp - damage).clamp(
+      0,
+      _state.maxPlayerHp,
+    );
     final isDefeated = nextPlayerHp <= 0;
 
     _state = _state.copyWith(
@@ -171,12 +218,34 @@ class BattleController extends ChangeNotifier {
     }
   }
 
+  void _clearAttackAndContinue(String message) {
+    _state = _state.copyWith(clearCurrentAttack: true, message: message);
+    notifyListeners();
+    _scheduleNextAttack();
+  }
+
   void _stopBossAttack() {
     _isBattleRunning = false;
     _attackTimer?.cancel();
     _attackTimer = null;
     _reactionTimer?.cancel();
     _reactionTimer = null;
+    _attackRecoveryTimer?.cancel();
+    _attackRecoveryTimer = null;
+  }
+
+  void _startAttackRecovery() {
+    _attackRecoveryTimer?.cancel();
+    _attackRecoveryTimer = Timer(const Duration(milliseconds: 650), () {
+      if (!_isBattleRunning ||
+          _state.isExecutionReady ||
+          _state.playerHp <= 0) {
+        return;
+      }
+
+      _state = _state.copyWith(canPlayerAttack: true);
+      notifyListeners();
+    });
   }
 
   @override

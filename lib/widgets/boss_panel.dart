@@ -87,132 +87,166 @@ class _BossPanelState extends State<BossPanel> with TickerProviderStateMixin {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return SizedBox(
-      height: 340,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: colorScheme.outlineVariant,
-                    width: 2,
-                  ),
-                ),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 18,
+          child: Container(
+            height: 2,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  colorScheme.error.withValues(alpha: 0.45),
+                  colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  Colors.transparent,
+                ],
               ),
             ),
           ),
+        ),
+        Positioned(
+          left: 28,
+          bottom: 0,
+          child: _CharacterShadow(
+            width: 220,
+            color: colorScheme.error.withValues(alpha: 0.22),
+          ),
+        ),
+        Positioned(
+          right: 2,
+          bottom: 0,
+          child: _CharacterShadow(
+            width: 160,
+            color: Colors.black.withValues(alpha: 0.42),
+          ),
+        ),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.24),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 2,
+          left: 0,
+          child: AnimatedBuilder(
+            animation: _attackController,
+            builder: (context, child) {
+              final attackValue = _attackController.value;
+
+              return Transform.translate(
+                offset: Offset(attackValue * 28, attackValue * 8),
+                child: Transform.scale(
+                  scale: 1 + attackValue * 0.08,
+                  child: child,
+                ),
+              );
+            },
+            child: Image.asset(
+              _bossSprite,
+              width: 284,
+              height: 374,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.none,
+              errorBuilder: _buildMissingImage,
+            ),
+          ),
+        ),
+        if (widget.currentAttackType == AttackType.perilous)
           Positioned(
             top: 0,
-            left: 36,
-            child: AnimatedBuilder(
-              animation: _attackController,
-              builder: (context, child) {
-                final attackValue = _attackController.value;
-
-                return Transform.translate(
-                  offset: Offset(attackValue * 22, attackValue * 8),
-                  child: Transform.scale(
-                    scale: 1 + attackValue * 0.08,
-                    child: child,
-                  ),
-                );
-              },
-              child: Image.asset(
-                _bossSprite,
-                width: 242,
-                height: 310,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.none,
-                errorBuilder: _buildMissingImage,
-              ),
+            left: 120,
+            child: Image.asset(
+              '${_imagePath}danger_kanji.png',
+              width: 112,
+              height: 112,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.none,
+              errorBuilder: _buildMissingImage,
             ),
           ),
-          if (widget.currentAttackType == AttackType.perilous)
-            Positioned(
-              top: 0,
-              left: 134,
-              child: Image.asset(
-                '${_imagePath}danger_kanji.png',
-                width: 64,
-                height: 64,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.none,
-                errorBuilder: _buildMissingImage,
-              ),
-            ),
-          if (widget.currentAttackType == AttackType.slash)
-            Positioned(
-              top: 92,
-              left: 158,
-              child: Image.asset(
-                '${_imagePath}slash_effect.png',
-                width: 188,
-                height: 134,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.none,
-                errorBuilder: _buildMissingImage,
-              ),
-            ),
+        if (widget.currentAttackType == AttackType.slash)
           Positioned(
-            top: 142,
-            left: 178,
-            right: 44,
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _clashController,
-                builder: (context, _) {
-                  final value = _clashController.value;
+            left: 160,
+            bottom: 116,
+            child: Image.asset(
+              '${_imagePath}slash_effect.png',
+              width: 230,
+              height: 164,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.none,
+              errorBuilder: _buildMissingImage,
+            ),
+          ),
+        Positioned(
+          left: 168,
+          right: 24,
+          bottom: 170,
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _clashController,
+              builder: (context, _) {
+                final value = _clashController.value;
 
-                  return Opacity(
-                    opacity: (1 - value).clamp(0, 1),
-                    child: Transform.scale(
-                      scale: 0.9 + value * 0.35,
-                      child: Text(
-                        '鏘！',
-                        textAlign: TextAlign.center,
-                        style: textTheme.headlineMedium?.copyWith(
-                          color: colorScheme.secondary,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(color: colorScheme.shadow, blurRadius: 8),
-                          ],
-                        ),
+                return Opacity(
+                  opacity: (1 - value).clamp(0, 1),
+                  child: Transform.scale(
+                    scale: 0.9 + value * 0.35,
+                    child: Text(
+                      '鏘！',
+                      textAlign: TextAlign.center,
+                      style: textTheme.headlineMedium?.copyWith(
+                        color: colorScheme.secondary,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(color: colorScheme.shadow, blurRadius: 8),
+                        ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
-          Positioned(
-            right: 38,
-            bottom: 0,
-            child: AnimatedBuilder(
-              animation: _damageController,
-              builder: (context, _) {
-                final value = _damageController.value;
-                final shakeOffset =
-                    math.sin(value * math.pi * 6) * 8 * (1 - value);
-
-                return Transform.translate(
-                  offset: Offset(shakeOffset, 0),
-                  child: Image.asset(
-                    _playerSprite,
-                    width: 176,
-                    height: 206,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.none,
-                    errorBuilder: _buildMissingImage,
                   ),
                 );
               },
             ),
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          right: -4,
+          bottom: 0,
+          child: AnimatedBuilder(
+            animation: _damageController,
+            builder: (context, _) {
+              final value = _damageController.value;
+              final shakeOffset =
+                  math.sin(value * math.pi * 6) * 8 * (1 - value);
+
+              return Transform.translate(
+                offset: Offset(shakeOffset, 0),
+                child: Image.asset(
+                  _playerSprite,
+                  width: 212,
+                  height: 248,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.none,
+                  errorBuilder: _buildMissingImage,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -244,5 +278,25 @@ class _BossPanelState extends State<BossPanel> with TickerProviderStateMixin {
     StackTrace? stackTrace,
   ) {
     return const SizedBox.shrink();
+  }
+}
+
+class _CharacterShadow extends StatelessWidget {
+  const _CharacterShadow({required this.width, required this.color});
+
+  final double width;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: 30,
+      decoration: BoxDecoration(
+        shape: BoxShape.rectangle,
+        borderRadius: BorderRadius.circular(999),
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
+      ),
+    );
   }
 }

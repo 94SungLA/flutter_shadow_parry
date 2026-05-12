@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 
-class PlayerActionPanel extends StatelessWidget {
-  const PlayerActionPanel({super.key, this.onParry, this.onDodge});
+import 'game_button.dart';
 
+class PlayerActionPanel extends StatelessWidget {
+  const PlayerActionPanel({
+    super.key,
+    this.onAttack,
+    this.onParry,
+    this.onDodge,
+  });
+
+  final VoidCallback? onAttack;
   final VoidCallback? onParry;
   final VoidCallback? onDodge;
 
@@ -11,18 +19,30 @@ class PlayerActionPanel extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: FilledButton.icon(
-            onPressed: onParry,
-            icon: const Icon(Icons.shield),
-            label: const Text('格擋'),
+          child: GameButton(
+            label: '攻擊',
+            icon: Icons.gavel,
+            primary: true,
+            compact: true,
+            onPressed: onAttack,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
-          child: FilledButton.tonalIcon(
+          child: GameButton(
+            label: '格擋',
+            icon: Icons.shield,
+            compact: true,
+            onPressed: onParry,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GameButton(
+            label: '閃身',
+            icon: Icons.directions_run,
+            compact: true,
             onPressed: onDodge,
-            icon: const Icon(Icons.directions_run),
-            label: const Text('閃身'),
           ),
         ),
       ],

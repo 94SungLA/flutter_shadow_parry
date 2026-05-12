@@ -14,10 +14,9 @@ void main() {
     await tester.tap(find.text('開始遊戲'));
     await tester.pumpAndSettle();
 
-    expect(find.text('戰鬥畫面'), findsOneWidget);
+    expect(find.text('攻擊'), findsOneWidget);
     expect(find.text('格擋'), findsOneWidget);
     expect(find.text('閃身'), findsOneWidget);
-    expect(find.text('Debug 勝利'), findsOneWidget);
-    expect(find.text('Debug 失敗'), findsOneWidget);
+    expect(find.text('離開'), findsOneWidget);
   });
 }

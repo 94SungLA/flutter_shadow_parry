@@ -10,19 +10,21 @@ class BattleState {
     required this.maxBossPosture,
     required this.combo,
     required this.message,
+    required this.canPlayerAttack,
     this.currentAttack,
   });
 
   factory BattleState.initial() {
     return const BattleState(
-      playerHp: 4,
-      maxPlayerHp: 4,
+      playerHp: 100,
+      maxPlayerHp: 100,
       bossHp: 100,
       maxBossHp: 100,
       bossPosture: 0,
       maxBossPosture: 100,
       combo: 0,
       message: '',
+      canPlayerAttack: true,
     );
   }
 
@@ -35,6 +37,7 @@ class BattleState {
   final int combo;
   final BossAttack? currentAttack;
   final String message;
+  final bool canPlayerAttack;
 
   bool get isExecutionReady => bossPosture >= maxBossPosture;
 
@@ -48,6 +51,7 @@ class BattleState {
     int? combo,
     BossAttack? currentAttack,
     String? message,
+    bool? canPlayerAttack,
     bool clearCurrentAttack = false,
   }) {
     return BattleState(
@@ -58,6 +62,7 @@ class BattleState {
       bossPosture: bossPosture ?? this.bossPosture,
       maxBossPosture: maxBossPosture ?? this.maxBossPosture,
       combo: combo ?? this.combo,
+      canPlayerAttack: canPlayerAttack ?? this.canPlayerAttack,
       currentAttack: clearCurrentAttack
           ? null
           : currentAttack ?? this.currentAttack,

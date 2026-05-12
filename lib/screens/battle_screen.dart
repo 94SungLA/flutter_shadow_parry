@@ -7,6 +7,8 @@ import '../game/battle_state.dart';
 import '../models/attack_type.dart';
 import '../services/audio_service.dart';
 import '../widgets/boss_panel.dart';
+import '../widgets/game_button.dart';
+import '../widgets/ink_background.dart';
 import '../widgets/player_action_panel.dart';
 import '../widgets/posture_bar.dart';
 import '../widgets/stat_bar.dart';
@@ -83,7 +85,8 @@ class _BattleScreenState extends State<BattleScreen> {
       _audioService.playParry();
     }
 
-    if (currentState.message == '閃身') {
+    if (previousState.message != currentState.message &&
+        currentState.message == '閃身') {
       _audioService.playDodgeSuccess();
     }
 
@@ -103,6 +106,8 @@ class _BattleScreenState extends State<BattleScreen> {
       nextFeedback = switch (currentState.message) {
         '鏘！完美格擋' => '鏘！',
         '閃身' => '閃身',
+        '攻擊' => '斬擊',
+        '反擊' => '反擊',
         _ => null,
       };
     }
@@ -152,42 +157,31 @@ class _BattleScreenState extends State<BattleScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('戰鬥畫面'),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: const Icon(Icons.arrow_back),
-          tooltip: '返回主畫面',
-        ),
-      ),
+      backgroundColor: const Color(0xFF080608),
       body: SafeArea(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            return _BattleContent(
-              state: _controller.state,
-              colorScheme: colorScheme,
-              attackSequence: _controller.state.currentAttack,
-              feedbackText: _feedbackText,
-              onParry: _controller.parry,
-              onDodge: _controller.dodge,
-              onExecute: () {
-                _audioService.playExecution();
-                _openResult(BattleResult.victory);
-              },
-              onBackToTitle: () {
-                _returnToTitle();
-              },
-              onVictoryTest: () {
-                _openResult(BattleResult.victory);
-              },
-              onDefeatTest: () {
-                _openResult(BattleResult.defeat);
-              },
-            );
-          },
+        child: InkBackground(
+          imageAsset: 'assets/images/backgrounds/battle_bg.png',
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) {
+              return _BattleContent(
+                state: _controller.state,
+                colorScheme: colorScheme,
+                attackSequence: _controller.state.currentAttack,
+                feedbackText: _feedbackText,
+                onAttack: _controller.attack,
+                onParry: _controller.parry,
+                onDodge: _controller.dodge,
+                onExecute: () {
+                  _audioService.playExecution();
+                  _openResult(BattleResult.victory);
+                },
+                onBackToTitle: () {
+                  _returnToTitle();
+                },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -200,174 +194,138 @@ class _BattleContent extends StatelessWidget {
     required this.colorScheme,
     required this.attackSequence,
     required this.feedbackText,
+    required this.onAttack,
     required this.onParry,
     required this.onDodge,
     required this.onExecute,
     required this.onBackToTitle,
-    required this.onVictoryTest,
-    required this.onDefeatTest,
   });
 
   final BattleState state;
   final ColorScheme colorScheme;
   final Object? attackSequence;
   final String? feedbackText;
+  final VoidCallback onAttack;
   final VoidCallback onParry;
   final VoidCallback onDodge;
   final VoidCallback onExecute;
   final VoidCallback onBackToTitle;
-  final VoidCallback onVictoryTest;
-  final VoidCallback onDefeatTest;
 
   @override
   Widget build(BuildContext context) {
     final canRespond = state.currentAttack != null && !state.isExecutionReady;
+    final canAttack =
+        state.currentAttack == null &&
+        state.canPlayerAttack &&
+        !state.isExecutionReady;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: const Color(0xFF12090D),
-              border: Border.all(
-                color: colorScheme.error.withValues(alpha: 0.45),
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  StatBar(
-                    label: 'Boss HP',
-                    value: state.bossHp,
-                    maxValue: state.maxBossHp,
-                    color: colorScheme.error,
-                  ),
-                  const SizedBox(height: 12),
-                  PostureBar(
-                    value: state.bossPosture,
-                    maxValue: state.maxBossPosture,
-                  ),
-                  const SizedBox(height: 12),
-                  StatBar(
-                    label: 'Player HP',
-                    value: state.playerHp,
-                    maxValue: state.maxPlayerHp,
-                    color: colorScheme.primary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '連續看破：${state.combo}',
-            textAlign: TextAlign.right,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: colorScheme.secondary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    BossPanel(
-                      isAttacking: state.currentAttack != null,
-                      isPlayerDamaged: feedbackText == '受傷',
-                      showParryClash: feedbackText == '鏘！',
-                      isBroken: state.isExecutionReady,
-                      currentAttackType: state.currentAttack?.type,
-                      playerSpriteState: _playerSpriteState,
-                    ),
-                    const SizedBox(height: 8),
-                    _GuardCountdownBar(
-                      attackSequence: attackSequence,
-                      isVisible: canRespond,
-                      colorScheme: colorScheme,
-                    ),
-                    SizedBox(
-                      height: 34,
-                      child: Center(
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 140),
-                          opacity: feedbackText == null ? 0 : 1,
-                          child: Text(
-                            feedbackText ?? '',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: feedbackText == '受傷'
-                                      ? colorScheme.error
-                                      : colorScheme.secondary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.1,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.52),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 20),
-          if (state.isExecutionReady) ...[
-            FilledButton(
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          top: 10,
+          child: _BattleHud(
+            state: state,
+            colorScheme: colorScheme,
+            onBackToTitle: onBackToTitle,
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 118,
+          bottom: state.isExecutionReady ? 150 : 126,
+          child: Stack(
+            children: [
+              BossPanel(
+                isAttacking: state.currentAttack != null,
+                isPlayerDamaged: feedbackText == '受傷',
+                showParryClash: feedbackText == '鏘！',
+                isBroken: state.isExecutionReady,
+                currentAttackType: state.currentAttack?.type,
+                playerSpriteState: _playerSpriteState,
+              ),
+              Positioned(
+                left: 54,
+                right: 54,
+                bottom: 28,
+                child: _GuardCountdownBar(
+                  attackSequence: attackSequence,
+                  isVisible: canRespond,
+                  colorScheme: colorScheme,
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 28,
+                child: Center(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 140),
+                    opacity: feedbackText == null ? 0 : 1,
+                    child: Text(
+                      feedbackText ?? '',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: feedbackText == '受傷'
+                                ? colorScheme.error
+                                : colorScheme.secondary,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.75),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (state.isExecutionReady)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 104,
+            child: GameButton(
+              label: '處決',
+              icon: Icons.flash_on,
+              primary: true,
               onPressed: onExecute,
-              style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.error,
-                foregroundColor: colorScheme.onError,
-                minimumSize: const Size.fromHeight(52),
-                textStyle: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.flash_on),
-                  SizedBox(width: 8),
-                  Text('處決'),
-                ],
-              ),
             ),
-            const SizedBox(height: 12),
-          ],
-          PlayerActionPanel(
+          ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 14,
+          child: PlayerActionPanel(
+            onAttack: canAttack ? onAttack : null,
             onParry: canRespond ? onParry : null,
             onDodge: canRespond ? onDodge : null,
           ),
-          const SizedBox(height: 10),
-          TextButton(onPressed: onBackToTitle, child: const Text('返回主畫面')),
-          Opacity(
-            opacity: 0.45,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: onVictoryTest,
-                    child: const Text('Debug 勝利'),
-                  ),
-                ),
-                Expanded(
-                  child: TextButton(
-                    onPressed: onDefeatTest,
-                    child: const Text('Debug 失敗'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -378,6 +336,9 @@ class _BattleContent extends StatelessWidget {
     if (feedbackText == '受傷') {
       return PlayerSpriteState.hit;
     }
+    if (feedbackText == '斬擊') {
+      return PlayerSpriteState.execute;
+    }
     if (feedbackText == '鏘！') {
       return PlayerSpriteState.parry;
     }
@@ -386,6 +347,88 @@ class _BattleContent extends StatelessWidget {
     }
 
     return PlayerSpriteState.idle;
+  }
+}
+
+class _BattleHud extends StatelessWidget {
+  const _BattleHud({
+    required this.state,
+    required this.colorScheme,
+    required this.onBackToTitle,
+  });
+
+  final BattleState state;
+  final ColorScheme colorScheme;
+  final VoidCallback onBackToTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Shadow Parry',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: const Color(0xFFFFE3E6),
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.8),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            TextButton(onPressed: onBackToTitle, child: const Text('離開')),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: StatBar(
+                label: 'Boss HP',
+                value: state.bossHp,
+                maxValue: state.maxBossHp,
+                color: colorScheme.error,
+              ),
+            ),
+            const SizedBox(width: 18),
+            Expanded(
+              child: StatBar(
+                label: 'Player HP',
+                value: state.playerHp,
+                maxValue: state.maxPlayerHp,
+                color: colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        PostureBar(value: state.bossPosture, maxValue: state.maxBossPosture),
+        const SizedBox(height: 5),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            '連續看破：${state.combo}',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: colorScheme.secondary,
+              fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.8),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
